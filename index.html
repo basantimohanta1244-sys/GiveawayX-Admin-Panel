@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GiveawayX | Master Admin Portal</title>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-base: #07080a;
+      --bg-sidebar: #0d0f14;
+      --bg-card: rgba(17, 20, 29, 0.9);
+      --bg-surface: #131722;
+      --bg-input: #0f121a;
+
+      --gold-100: #fff9e6;
+      --gold-300: #f7d26b;
+      --gold-400: #eebf38;
+      --gold-500: #d4a017;
+      --gold-600: #ab7b0b;
+      --gold-glow: rgba(238, 191, 56, 0.22);
+      
+      --gold-gradient: linear-gradient(135deg, #fff7d6 0%, #f7d26b 45%, #c49419 100%);
+      --gold-gradient-btn: linear-gradient(135deg, #fae28c 0%, #eebf38 45%, #ab7b0b 100%);
+      --gold-border: rgba(238, 191, 56, 0.35);
+
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+
+      --status-live: #10b981;
+      --status-live-bg: rgba(16, 185, 129, 0.12);
+      --status-upcoming: #f59e0b;
+      --status-upcoming-bg: rgba(245, 158, 11, 0.12);
+      --status-ended: #64748b;
+      --status-ended-bg: rgba(100, 116, 139, 0.15);
+      --status-danger: #f43f5e;
+      --status-danger-bg: rgba(244, 63, 94, 0.12);
+
+      --radius-xl: 20px;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+
+      --sidebar-width: 260px;
+      --header-height: 70px;
+      --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg-base); color: var(--text-main); min-height: 100vh; overflow-x: hidden; display: flex; }
+    h1, h2, h3, h4, .brand-title, .stat-value, .gold-text { font-family: 'Outfit', sans-serif; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background: #262c3d; border-radius: 10px; }
+
+    #login-screen {
+      position: fixed; inset: 0; z-index: 10000;
+      background-color: var(--bg-base);
+      background-image: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(238, 191, 56, 0.15), transparent 70%);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .login-card {
+      width: 100%; max-width: 440px; background: var(--bg-card);
+      border: 1.5px solid var(--gold-border); border-radius: var(--radius-xl);
+      padding: 36px 30px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px var(--gold-glow);
+    }
+    .login-brand { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; text-align: center; }
+    .login-logo { width: 52px; height: 52px; border-radius: 14px; border: 1.5px solid var(--gold-400); margin-bottom: 12px; }
+    .login-title { font-size: 26px; font-weight: 900; }
+    .login-title span { background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+    .input-wrap { position: relative; display: flex; align-items: center; }
+    .input-wrap i.prefix-icon { position: absolute; left: 16px; color: var(--gold-400); font-size: 15px; }
+    .form-input {
+      width: 100%; height: 50px; background: var(--bg-input); border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-md); color: #fff; padding: 0 16px 0 46px; font-size: 14px; font-weight: 600;
+    }
+    .form-input:focus { outline: none; border-color: var(--gold-400); box-shadow: 0 0 0 3px var(--gold-glow); }
+    .toggle-pass-btn { position: absolute; right: 14px; background: none; border: none; color: var(--text-dim); cursor: pointer; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px;
+      padding: 0 20px; border-radius: var(--radius-md); font-size: 14px; font-weight: 800;
+      text-transform: uppercase; cursor: pointer; border: none; transition: var(--transition);
+      font-family: 'Outfit', sans-serif;
+    }
+    .btn-gold { background: var(--gold-gradient-btn); color: #06070a; width: 100%; box-shadow: 0 8px 25px -4px rgba(238, 191, 56, 0.4); }
+    .btn-gold:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 30px -4px rgba(238, 191, 56, 0.55); }
+    .btn-gold:disabled { background: #222634; color: #555e70; cursor: not-allowed; box-shadow: none; border: 1px solid rgba(255,255,255,0.05); }
+    .btn-sm { height: 34px; padding: 0 12px; font-size: 11.5px; }
+    .btn-outline { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-subtle); color: var(--text-main); }
+    .btn-outline:hover { border-color: var(--gold-400); color: var(--gold-300); }
+    .btn-danger { background: var(--status-danger-bg); border: 1px solid rgba(244, 63, 94, 0.3); color: var(--status-danger); }
+
+    .app-sidebar {
+      width: var(--sidebar-width); background: var(--bg-sidebar); border-right: 1px solid var(--border-subtle);
+      height: 100vh; position: fixed; top: 0; left: 0; z-index: 1000; display: flex; flex-direction: column;
+    }
+    .sidebar-brand { height: var(--header-height); padding: 0 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border-subtle); }
+    .sidebar-brand img { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--gold-400); }
+    .sidebar-menu { flex: 1; padding: 18px 12px; list-style: none; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+    .nav-item-btn {
+      width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+      background: transparent; border: none; border-radius: var(--radius-md); color: var(--text-muted);
+      font-size: 13.5px; font-weight: 600; cursor: pointer; text-align: left;
+    }
+    .nav-item-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
+    .nav-item-btn.active { background: rgba(238, 191, 56, 0.12); border: 1px solid var(--gold-border); color: #fff; }
+    .nav-item-btn.active i { color: var(--gold-400); }
+    .sidebar-footer { padding: 14px 16px; border-top: 1px solid var(--border-subtle); }
+    #sidebar-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); z-index: 999; display: none; }
+
+    .app-main { flex: 1; margin-left: var(--sidebar-width); display: flex; flex-direction: column; min-height: 100vh; min-width: 0; }
+    .app-header {
+      height: var(--header-height); background: var(--bg-card); border-bottom: 1px solid var(--border-subtle);
+      position: sticky; top: 0; z-index: 900; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .menu-toggle-btn { display: none; background: none; border: none; color: var(--text-main); font-size: 20px; cursor: pointer; }
+    .global-search-box { position: relative; width: 320px; }
+    .global-search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gold-400); font-size: 13px; }
+    .global-search-input {
+      width: 100%; height: 40px; background: var(--bg-input); border: 1px solid var(--border-subtle);
+      border-radius: 30px; padding: 0 16px 0 38px; font-size: 13px; color: #fff;
+    }
+    .header-right { display: flex; align-items: center; gap: 18px; }
+    .header-user-pill { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .user-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--gold-gradient-btn); color: #000; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+
+    .app-content { flex: 1; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+    .page-view { display: none; }
+    .page-view.active { display: block; }
+
+    .page-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .page-title { font-size: 24px; font-weight: 900; }
+    .page-title span { background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .glass-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); padding: 24px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+    .stat-header { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+    .stat-header i { color: var(--gold-400); font-size: 18px; }
+    .stat-value { font-size: 28px; font-weight: 900; color: #fff; }
+
+    .table-container { width: 100%; overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+    thead th { background: #151824; padding: 14px 16px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-dim); border-bottom: 1px solid var(--border-subtle); white-space: nowrap; }
+    tbody td { padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); color: var(--text-muted); white-space: nowrap; }
+
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 30px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; }
+    .badge-live { background: var(--status-live-bg); color: var(--status-live); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-upcoming { background: var(--status-upcoming-bg); color: var(--status-upcoming); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-ended { background: var(--status-ended-bg); color: var(--text-muted); border: 1px solid rgba(100, 116, 139, 0.3); }
+
+    /* Payout Type Badges */
+    .payout-badge-upi {
+      display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 6px;
+      font-size: 11px; font-weight: 700; background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .payout-badge-play {
+      display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 6px;
+      font-size: 11px; font-weight: 700; background: rgba(6, 182, 212, 0.12); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    .win-amount-pill {
+      display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 6px;
+      font-size: 14px; font-weight: 900; color: #34d399; background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3); font-family: 'Outfit', sans-serif;
+    }
+
+    .filter-ribbon {
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px;
+      background: var(--bg-surface); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);
+    }
+    .filter-select {
+      height: 42px; background: var(--bg-input); border: 1.5px solid var(--border-subtle); color: #fff;
+      border-radius: var(--radius-md); padding: 0 14px; font-size: 13px; font-weight: 600; min-width: 220px;
+    }
+
+    .campaign-overview-card {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;
+      background: linear-gradient(135deg, rgba(238, 191, 56, 0.08) 0%, rgba(17, 20, 29, 0.95) 100%);
+      border: 1px dashed var(--gold-border); border-radius: var(--radius-lg); padding: 16px 20px; margin-bottom: 18px;
+    }
+
+    .lock-notice-box {
+      background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); padding: 12px 16px;
+      border-radius: var(--radius-md); color: #fbbf24; font-size: 12.5px; font-weight: 600; margin: 14px 0;
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-card { background: #121520; border: 1px solid var(--border-gold); border-radius: var(--radius-xl); padding: 28px; width: 100%; max-width: 540px; position: relative; }
+    .modal-close { position: absolute; top: 18px; right: 18px; background: none; border: none; color: var(--text-dim); font-size: 18px; cursor: pointer; }
+
+    #toast-shelf { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .toast { background: #141724; border-left: 4px solid var(--gold-400); padding: 12px 18px; border-radius: var(--radius-md); color: #fff; font-size: 13px; font-weight: 600; pointer-events: auto; }
+    .toast.success { border-left-color: var(--status-live); }
+    .toast.danger { border-left-color: var(--status-danger); }
+
+    @media (max-width: 900px) {
+      .app-sidebar { transform: translateX(-100%); }
+      .app-sidebar.open { transform: translateX(0); }
+      .app-main { margin-left: 0; }
+      .menu-toggle-btn { display: block; }
+      .global-search-box { width: 180px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="login-brand">
+        <img src="https://i.postimg.cc/SKnmwk9T/file-00000000cf808211babf3589e62d873e.png" alt="GiveawayX Logo" class="login-logo">
+        <h2 class="login-title">Giveaway<span>X</span> Admin</h2>
+        <p class="login-desc">Authorized Administrator Portal</p>
+      </div>
+
+      <form onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label">Admin Email</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-envelope prefix-icon"></i>
+            <input type="email" id="login-email" class="form-input" placeholder="admin@domain.com" required autocomplete="email">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-lock prefix-icon"></i>
+            <input type="password" id="login-pass" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="toggle-pass-btn" onclick="togglePasswordVisibility('login-pass', this)">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-gold" id="login-submit-btn">
+          <i class="fa-solid fa-right-to-bracket"></i> Login to Console
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
+  <aside class="app-sidebar" id="app-sidebar">
+    <div class="sidebar-brand">
+      <img src="https://i.postimg.cc/SKnmwk9T/file-00000000cf808211babf3589e62d873e.png" alt="Logo">
+      <div>
+        <div class="brand-title" style="font-size: 18px;">Giveaway<span>X</span></div>
+        <div style="font-size: 9px; font-weight: 800; color: var(--gold-400); letter-spacing: 1px;">MASTER CONTROL</div>
+      </div>
+    </div>
+
+    <ul class="sidebar-menu">
+      <li><button class="nav-item-btn active" onclick="switchNav('dashboard', this)"><i class="fa-solid fa-chart-pie"></i> Dashboard</button></li>
+      <li><button class="nav-item-btn" onclick="switchNav('create-giveaway', this)"><i class="fa-solid fa-plus-circle"></i> Create Giveaway</button></li>
+      <li><button class="nav-item-btn" onclick="switchNav('manage-giveaways', this)"><i class="fa-solid fa-boxes-stacked"></i> Manage Giveaways</button></li>
+      <li><button class="nav-item-btn" onclick="switchNav('participants', this)"><i class="fa-solid fa-users"></i> Live Participants</button></li>
+      <li><button class="nav-item-btn" onclick="switchNav('winner-selection', this)"><i class="fa-solid fa-wand-magic-sparkles"></i> Winner Selection</button></li>
+      <li><button class="nav-item-btn" onclick="switchNav('winners-mgmt', this)"><i class="fa-solid fa-trophy"></i> Winners &amp; Payouts</button></li>
+      <li><button class="nav-item-btn" onclick="switchNav('settings', this)"><i class="fa-solid fa-sliders"></i> Settings</button></li>
+      <li><button class="nav-item-btn" onclick="switchNav('admin-profile', this)"><i class="fa-solid fa-user-shield"></i> Admin Profile</button></li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <button class="btn btn-outline" style="width: 100%;" onclick="handleLogout()">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+      </button>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <header class="app-header">
+      <div class="header-left">
+        <button class="menu-toggle-btn" onclick="toggleMobileSidebar()"><i class="fa-solid fa-bars"></i></button>
+        <div class="global-search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" class="global-search-input" id="global-search-input" placeholder="Search giveaway, name, UPI or mobile..." oninput="handleGlobalSearch(this.value)">
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="header-user-pill" onclick="switchNav('admin-profile')">
+          <div class="user-avatar" id="header-avatar-letter">A</div>
+          <div style="font-size: 13px; font-weight: 700;" class="desktop-only" id="header-admin-name">Administrator</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="app-content">
+
+      <!-- VIEW 1: DASHBOARD -->
+      <section id="view-dashboard" class="page-view active">
+        <div class="page-header-row">
+          <div>
+            <h1 class="page-title">Executive <span>Dashboard</span></h1>
+            <p style="font-size: 13px; color: var(--text-muted);">Real-time Firebase Firestore giveaway metrics</p>
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="switchNav('create-giveaway')">
+            <i class="fa-solid fa-plus"></i> New Giveaway
+          </button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header"><span>Total Giveaways</span><i class="fa-solid fa-cubes"></i></div>
+            <div class="stat-value" id="stat-total-gw">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header"><span>Live Now</span><i class="fa-solid fa-bolt" style="color: var(--status-live);"></i></div>
+            <div class="stat-value" style="color: var(--status-live);" id="stat-live-gw">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header"><span>Upcoming</span><i class="fa-solid fa-clock" style="color: var(--status-upcoming);"></i></div>
+            <div class="stat-value" style="color: var(--status-upcoming);" id="stat-upcoming-gw">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header"><span>Ended</span><i class="fa-solid fa-flag-checkered"></i></div>
+            <div class="stat-value" style="color: var(--text-dim);" id="stat-ended-gw">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header"><span>Total Entries</span><i class="fa-solid fa-users"></i></div>
+            <div class="stat-value" id="stat-participants">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-header"><span>Winners Declared</span><i class="fa-solid fa-trophy" style="color: var(--gold-400);"></i></div>
+            <div class="stat-value" style="color: var(--gold-400);" id="stat-winners">0</div>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 14px;"><i class="fa-solid fa-fire" style="color: var(--gold-400);"></i> Recent Live Giveaways</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Giveaway ID</th>
+                  <th>Campaign Name</th>
+                  <th>Total Prize</th>
+                  <th>Winners</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="dash-recent-gw-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: CREATE GIVEAWAY -->
+      <section id="view-create-giveaway" class="page-view">
+        <div class="page-header-row">
+          <div>
+            <h1 class="page-title">Create Private <span>Giveaway</span></h1>
+            <p style="font-size: 13px; color: var(--text-muted);">Set prize distribution & generate private secret URL</p>
+          </div>
+        </div>
+
+        <div class="glass-card" style="max-width: 800px;">
+          <div id="create-success-box" style="display: none; background: rgba(238, 191, 56, 0.08); border: 1.5px dashed var(--gold-400); border-radius: var(--radius-lg); padding: 22px; margin-bottom: 24px; text-align: center;">
+            <div style="font-size: 12px; font-weight: 800; color: var(--gold-400); letter-spacing: 1px; text-transform: uppercase;"><i class="fa-solid fa-circle-check"></i> GIVEAWAY CREATED SUCCESSFULLY</div>
+            <div style="font-size: 22px; font-weight: 900; margin: 10px 0; color: #fff;" id="created-gw-id">GW-XXXXXXX</div>
+            <div style="font-size: 13px; color: var(--gold-300); word-break: break-all; margin-bottom: 16px; font-family: monospace;" id="created-gw-url">https://...</div>
+            
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+              <button class="btn btn-gold btn-sm" id="btn-copy-url-created" onclick="copyCreatedUrl()"><i class="fa-regular fa-copy"></i> Copy Direct URL</button>
+              <button class="btn btn-outline btn-sm" onclick="openCreatedUrl()"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Portal</button>
+              <button class="btn btn-outline btn-sm" onclick="resetCreateForm()"><i class="fa-solid fa-rotate-left"></i> Create Another</button>
+            </div>
+          </div>
+
+          <form id="create-gw-form" onsubmit="handleCreateGiveaway(event)">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+              <div class="form-group">
+                <label class="form-label">Giveaway Name *</label>
+                <input type="text" id="cgw-name" class="form-input" placeholder="e.g. MEGA CASH DROP" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Total Prize Pool Amount *</label>
+                <input type="text" id="cgw-prize" class="form-input" placeholder="e.g. ₹500" required>
+              </div>
+
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label class="form-label">
+                  Prize Distribution Breakdown (Per Rank) *
+                  <span style="color: var(--gold-400); font-size: 10.5px; text-transform: none;">(Comma-separated)</span>
+                </label>
+                <input type="text" id="cgw-distribution" class="form-input" placeholder="1st: ₹30, 2nd: ₹20, 3rd: ₹15, 4th-10th: ₹10" value="1st: ₹30, 2nd: ₹20, 3rd: ₹15, 4th-10th: ₹10" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Number of Winners *</label>
+                <input type="number" id="cgw-winners" class="form-input" min="1" max="1000" value="10" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Banner Image URL</label>
+                <input type="url" id="cgw-banner" class="form-input" placeholder="https://example.com/banner.jpg">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Start Date &amp; Time *</label>
+                <input type="datetime-local" id="cgw-start" class="form-input" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">End Date &amp; Time *</label>
+                <input type="datetime-local" id="cgw-end" class="form-input" required>
+              </div>
+
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label class="form-label">Winner Announcement Date *</label>
+                <input type="datetime-local" id="cgw-announce" class="form-input" required>
+              </div>
+
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label class="form-label">Campaign Rules</label>
+                <textarea id="cgw-rules" class="form-input" style="height: 85px; padding: 12px; resize: vertical;" placeholder="1. Sahi UPI ID ya 10-digit Mobile Number enter karein.&#10;2. Ek entry per user.&#10;3. Minimum 1000 participants required."></textarea>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-gold" style="margin-top: 10px;" id="cgw-submit-btn">
+              <i class="fa-solid fa-paper-plane"></i> Publish to Firebase
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- VIEW 3: MANAGE GIVEAWAYS -->
+      <section id="view-manage-giveaways" class="page-view">
+        <div class="page-header-row">
+          <div>
+            <h1 class="page-title">Manage <span>Giveaways</span></h1>
+            <p style="font-size: 13px; color: var(--text-muted);">Overview, URLs, and Campaign Status</p>
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="switchNav('create-giveaway')"><i class="fa-solid fa-plus"></i> Add New</button>
+        </div>
+
+        <div class="glass-card">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Giveaway ID</th>
+                  <th>Name</th>
+                  <th>Total Prize</th>
+                  <th>Distribution</th>
+                  <th>Winners</th>
+                  <th>Enrolled</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="mgw-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: EDIT MODAL -->
+      <div class="modal-overlay" id="edit-gw-modal">
+        <div class="modal-card">
+          <button class="modal-close" onclick="closeEditModal()"><i class="fa-solid fa-xmark"></i></button>
+          <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">Edit Campaign</h3>
+          <p style="font-size: 12px; color: var(--gold-400); margin-bottom: 18px;" id="edit-modal-gid">GW-XXXXXX</p>
+
+          <form id="edit-gw-form" onsubmit="handleSaveEditGiveaway(event)">
+            <input type="hidden" id="edit-gw-id">
+            
+            <div class="form-group">
+              <label class="form-label">Giveaway Name</label>
+              <input type="text" id="edit-name" class="form-input" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label class="form-label">Total Prize</label>
+                <input type="text" id="edit-prize" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Winner Count</label>
+                <input type="number" id="edit-winners" class="form-input" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Prize Distribution (e.g. 1st: ₹30, 2nd: ₹20...)</label>
+              <input type="text" id="edit-distribution" class="form-input" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label class="form-label">End Date</label>
+                <input type="datetime-local" id="edit-end" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Announcement Date</label>
+                <input type="datetime-local" id="edit-announce" class="form-input" required>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+              <button type="submit" class="btn btn-gold" style="flex: 1;">Save Changes</button>
+              <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- VIEW 5: PARTICIPANTS (WITH ALAG-ALAG GIVEAWAY FILTER & PAYOUT METHOD TAG) -->
+      <section id="view-participants" class="page-view">
+        <div class="page-header-row">
+          <div>
+            <h1 class="page-title">Live <span>Participants</span></h1>
+            <p style="font-size: 13px; color: var(--text-muted);">Alag-alag giveaway ke enrolled members aur unke payout preferences dekhein</p>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="filter-ribbon">
+            <span style="font-size: 12px; font-weight: 800; color: var(--gold-400); text-transform: uppercase;">
+              <i class="fa-solid fa-filter"></i> Select Giveaway:
+            </span>
+            <select id="part-gw-filter" class="filter-select" onchange="renderParticipantsTable()">
+              <option value="ALL">All Campaigns (Consolidated)</option>
+            </select>
+            <select id="part-status-filter" class="filter-select" style="min-width: 160px;" onchange="renderParticipantsTable()">
+              <option value="ALL">All Entries</option>
+              <option value="VALID">Valid Only</option>
+              <option value="INVALID">Invalid Only</option>
+            </select>
+          </div>
+
+          <div class="campaign-overview-card" id="part-campaign-summary-box">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Current Filtered Campaign</div>
+              <div style="font-size: 18px; font-weight: 800; color: #fff;" id="part-selected-gw-name">All Campaigns</div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <span class="badge badge-live" style="font-size: 12px; padding: 6px 14px;" id="cnt-valid-badge">0 Valid Members</span>
+              <span class="badge badge-ended" style="font-size: 12px; padding: 6px 14px;" id="cnt-invalid-badge">0 Invalid</span>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Entry ID</th>
+                  <th>Full Name</th>
+                  <th>Payout Mode &amp; Details</th>
+                  <th>Secret Passcode</th>
+                  <th>Giveaway ID</th>
+                  <th>Entry Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="participants-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 6: WINNER SELECTION (1000 MEMBERS LOCK RULE) -->
+      <section id="view-winner-selection" class="page-view">
+        <div class="page-header-row">
+          <div>
+            <h1 class="page-title">Automated <span>Winner Selection</span></h1>
+            <p style="font-size: 13px; color: var(--text-muted);">Strict condition: Minimum 1000 members required to unlock draw</p>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+          <div class="glass-card">
+            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 16px;">1. Select Campaign Draw</h3>
+            
+            <div class="form-group">
+              <label class="form-label">Select Giveaway</label>
+              <select id="draw-gw-select" class="form-input" onchange="updateDrawSelectionMetrics()"></select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 18px 0;">
+              <div style="background: var(--bg-surface); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 11px; color: var(--text-dim); font-weight: 700;">VALID MEMBERS</div>
+                <div style="font-size: 20px; font-weight: 900; color: #fff;" id="draw-m-valid">0</div>
+              </div>
+              <div style="background: var(--bg-surface); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                <div style="font-size: 11px; color: var(--gold-400); font-weight: 700;">REQUIRED TARGET</div>
+                <div style="font-size: 20px; font-weight: 900; color: var(--gold-300);">1,000</div>
+              </div>
+            </div>
+
+            <div id="draw-lock-notice" class="lock-notice-box">
+              <i class="fa-solid fa-lock"></i>
+              <span id="draw-lock-text">Checking member threshold...</span>
+            </div>
+
+            <button class="btn btn-gold" id="btn-execute-draw" onclick="promptWinnerSelection()" disabled>
+              <i class="fa-solid fa-lock"></i> Locked (< 1000 Members)
+            </button>
+          </div>
+
+          <div class="glass-card">
+            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 16px;">2. Selected Winners Output</h3>
+            <div id="draw-output-empty" style="text-align: center; padding: 40px 20px; color: var(--text-dim);">
+              <i class="fa-solid fa-dice" style="font-size: 32px; color: var(--gold-500); margin-bottom: 10px;"></i>
+              <p>Target complete hone par winners draw execute kar payenge.</p>
+            </div>
+            <div id="draw-output-list" style="display: none; flex-direction: column; gap: 8px; max-height: 380px; overflow-y: auto;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 7: WINNERS MANAGEMENT (WITH PAYOUT DETAILS & SPECIFIC GIVEAWAY PUBLISH) -->
+      <section id="view-winners-mgmt" class="page-view">
+        <div class="page-header-row">
+          <div>
+            <h1 class="page-title">Winners &amp; <span>Result Publishing</span></h1>
+            <p style="font-size: 13px; color: var(--text-muted);">Alag-alag giveaway ka result independently publish karein aur winning amount/payout dekhein</p>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="filter-ribbon" style="justify-content: space-between;">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <span style="font-size: 12px; font-weight: 800; color: var(--gold-400); text-transform: uppercase;">
+                <i class="fa-solid fa-trophy"></i> Filter Giveaway:
+              </span>
+              <select id="win-gw-filter" class="filter-select" onchange="renderWinnersTable()">
+                <option value="ALL">All Giveaways (All Results)</option>
+              </select>
+            </div>
+
+            <div id="master-publish-action-wrap"></div>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Rank &amp; Winner Name</th>
+                  <th>Winning Amount (Side)</th>
+                  <th>Prize Payout Mode</th>
+                  <th>Entry ID</th>
+                  <th>Campaign ID</th>
+                  <th>Publication Status</th>
+                  <th>Individual Action</th>
+                </tr>
+              </thead>
+              <tbody id="winners-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 8: SETTINGS -->
+      <section id="view-settings" class="page-view">
+        <div class="page-header-row">
+          <div>
+            <h1 class="page-title">Platform <span>Settings</span></h1>
+            <p style="font-size: 13px; color: var(--text-muted);">Configure public domain URLs and portal parameters</p>
+          </div>
+        </div>
+
+        <div class="glass-card" style="max-width: 680px;">
+          <form onsubmit="handleSaveSettings(event)">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="form-group">
+                <label class="form-label">Platform Name</label>
+                <input type="text" id="set-name" class="form-input" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Public Website URL (For Direct Links)</label>
+                <input type="url" id="set-url" class="form-input" placeholder="https://giveawayx-80b5e.web.app" required>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-gold" style="margin-top: 10px;">Save Configuration</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- VIEW 9: PROFILE -->
+      <section id="view-admin-profile" class="page-view">
+        <div class="page-header-row">
+          <div>
+            <h1 class="page-title">Admin <span>Profile</span></h1>
+          </div>
+        </div>
+        <div class="glass-card" style="max-width: 500px;">
+          <div class="form-group">
+            <label class="form-label">Logged In As</label>
+            <input type="text" id="prof-email-display" class="form-input" disabled>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="handleLogout()">Sign Out</button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <div id="toast-shelf"></div>
+
+  <!-- JAVASCRIPT PRODUCTION LOGIC -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCXeahmOnixSiYzENwyHe5BYac3GdhCEKM",
+      authDomain: "giveawayx-80b5e.firebaseapp.com",
+      databaseURL: "https://giveawayx-80b5e-default-rtdb.firebaseio.com",
+      projectId: "giveawayx-80b5e",
+      storageBucket: "giveawayx-80b5e.firebasestorage.app",
+      messagingSenderId: "205684139523",
+      appId: "1:205684139523:web:155b7874fcc41f26f99036",
+      measurementId: "G-DHZ9B1TPHL"
+    };
+
+    let db = null;
+    let auth = null;
+
+    try {
+      if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        auth = firebase.auth();
+      }
+    } catch (err) {
+      console.error("Firebase Error:", err.message);
+    }
+
+    let appConfig = {
+      websiteName: "GiveawayX",
+      websiteUrl: "https://giveawayx-80b5e.web.app"
+    };
+
+    let giveaways = [];
+    let participants = [];
+    let winnersList = [];
+
+    function parseDistributionTiers(text) {
+      if (!text || !text.trim()) return [];
+      return text.split(',').map(item => {
+        const parts = item.split(':');
+        return {
+          rank: parts[0] ? parts[0].trim() : '',
+          amount: parts[1] ? parts[1].trim() : ''
+        };
+      }).filter(t => t.rank && t.amount);
+    }
+
+    function getPrizeForRank(rankNum, gw) {
+      const tiers = gw.prizeTiers || parseDistributionTiers(gw.prizeDistribution);
+      if (!tiers || tiers.length === 0) return gw.prize || '₹30';
+
+      for (let t of tiers) {
+        const rLower = t.rank.toLowerCase();
+        if (rLower.includes(`${rankNum}st`) || rLower.includes(`${rankNum}nd`) || rLower.includes(`${rankNum}rd`) || rLower.includes(`${rankNum}th`)) {
+          return t.amount;
+        }
+        if (rLower.includes('-')) {
+          const [startStr, endStr] = rLower.replace(/[^0-9-]/g, '').split('-');
+          const start = parseInt(startStr);
+          const end = parseInt(endStr);
+          if (rankNum >= start && rankNum <= end) {
+            return t.amount;
+          }
+        }
+      }
+      return tiers[tiers.length - 1].amount || gw.prize || '₹10';
+    }
+
+    function getPublicGiveawayUrl(gw) {
+      let base = (appConfig.websiteUrl && appConfig.websiteUrl.trim()) ? appConfig.websiteUrl.trim() : window.location.origin;
+      if (!base.endsWith('/')) base += '/';
+      return `${base}?id=${gw.id}&key=${gw.secretKey || 'SEC-' + gw.id}`;
+    }
+
+    function copyToClipboard(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text)
+          .then(() => showToast("URL copied to clipboard!", "success"))
+          .catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const tempInput = document.createElement("textarea");
+      tempInput.value = text;
+      tempInput.style.position = "fixed";
+      tempInput.style.top = "0";
+      tempInput.style.left = "0";
+      document.body.appendChild(tempInput);
+      tempInput.focus();
+      tempInput.select();
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) showToast("URL copied to clipboard!", "success");
+        else showToast("Please copy manually.", "danger");
+      } catch (err) {
+        showToast("Please copy manually.", "danger");
+      }
+      document.body.removeChild(tempInput);
+    }
+
+    function checkAuth() {
+      if (auth) {
+        auth.onAuthStateChanged(user => {
+          const loginOverlay = document.getElementById('login-screen');
+          if (user) {
+            loginOverlay.style.display = 'none';
+            document.getElementById('prof-email-display').value = user.email;
+            document.getElementById('header-admin-name').innerText = user.email.split('@')[0];
+            fetchFirestoreLive();
+          } else {
+            loginOverlay.style.display = 'flex';
+          }
+        });
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-pass').value.trim();
+      const btn = document.getElementById('login-submit-btn');
+
+      if (!auth) return showToast("Firebase Auth unavailable", "danger");
+
+      try {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...';
+        await auth.signInWithEmailAndPassword(email, pass);
+        showToast("Login successful!", "success");
+      } catch (err) {
+        showToast("Login Failed: " + err.message, "danger");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login to Console';
+      }
+    }
+
+    async function handleLogout() {
+      if (auth) await auth.signOut();
+      showToast("Signed out", "info");
+    }
+
+    function togglePasswordVisibility(id, btn) {
+      const el = document.getElementById(id);
+      el.type = el.type === 'password' ? 'text' : 'password';
+    }
+
+    function switchNav(viewId, el) {
+      document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
+      const target = document.getElementById(`view-${viewId}`);
+      if (target) target.classList.add('active');
+
+      document.querySelectorAll('.nav-item-btn').forEach(btn => btn.classList.remove('active'));
+      if (el) el.classList.add('active');
+
+      closeMobileSidebar();
+      if (viewId === 'manage-giveaways') renderManageGiveawaysTable();
+      if (viewId === 'participants') renderParticipantsTable();
+      if (viewId === 'winner-selection') populateWinnerSelectionDropdown();
+      if (viewId === 'winners-mgmt') renderWinnersTable();
+      if (viewId === 'settings') populateSettingsForm();
+    }
+
+    function toggleMobileSidebar() {
+      document.getElementById('app-sidebar').classList.toggle('open');
+      document.getElementById('sidebar-overlay').style.display = document.getElementById('app-sidebar').classList.contains('open') ? 'block' : 'none';
+    }
+    function closeMobileSidebar() {
+      document.getElementById('app-sidebar').classList.remove('open');
+      document.getElementById('sidebar-overlay').style.display = 'none';
+    }
+
+    function getGiveawayStatus(gw) {
+      const now = new Date().getTime();
+      const start = new Date(gw.start).getTime();
+      const end = new Date(gw.end).getTime();
+      if (now < start) return 'UPCOMING';
+      if (now >= start && now <= end) return 'LIVE';
+      return 'ENDED';
+    }
+
+    function fetchFirestoreLive() {
+      if (!db) return;
+
+      db.collection("giveaways").onSnapshot(snap => {
+        giveaways = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderDashboard();
+        renderManageGiveawaysTable();
+        populateWinnerSelectionDropdown();
+        populateParticipantsGwDropdown();
+        populateWinnersGwDropdown();
+      });
+
+      db.collection("participants").onSnapshot(snap => {
+        participants = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderParticipantsTable();
+        renderDashboard();
+        updateDrawSelectionMetrics();
+      });
+
+      db.collection("winners").onSnapshot(snap => {
+        winnersList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderWinnersTable();
+        renderDashboard();
+      });
+
+      db.collection("settings").doc("platform_config").get().then(doc => {
+        if (doc.exists) appConfig = { ...appConfig, ...doc.data() };
+        populateSettingsForm();
+      });
+    }
+
+    function renderDashboard() {
+      let live = 0, up = 0, end = 0;
+      giveaways.forEach(g => {
+        const s = getGiveawayStatus(g);
+        if (s === 'LIVE') live++;
+        if (s === 'UPCOMING') up++;
+        if (s === 'ENDED') end++;
+      });
+      document.getElementById('stat-total-gw').innerText = giveaways.length;
+      document.getElementById('stat-live-gw').innerText = live;
+      document.getElementById('stat-upcoming-gw').innerText = up;
+      document.getElementById('stat-ended-gw').innerText = end;
+      document.getElementById('stat-participants').innerText = participants.length;
+      document.getElementById('stat-winners').innerText = winnersList.length;
+
+      document.getElementById('dash-recent-gw-table').innerHTML = giveaways.slice(0, 5).map(g => `
+        <tr>
+          <td style="color: var(--gold-400); font-weight:700; font-family: monospace;">${g.id}</td>
+          <td>${g.name}</td>
+          <td style="color: var(--status-live); font-weight:700;">${g.prize}</td>
+          <td>${g.winnerCount}</td>
+          <td><span class="badge badge-${getGiveawayStatus(g).toLowerCase()}">${getGiveawayStatus(g)}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // CREATE GIVEAWAY WITH PRIZE DISTRIBUTION & WORKING SECRET URL
+    async function handleCreateGiveaway(e) {
+      e.preventDefault();
+      const name = document.getElementById('cgw-name').value.trim();
+      const prize = document.getElementById('cgw-prize').value.trim();
+      const distribution = document.getElementById('cgw-distribution').value.trim();
+      const winners = parseInt(document.getElementById('cgw-winners').value);
+      const banner = document.getElementById('cgw-banner').value.trim();
+      const start = document.getElementById('cgw-start').value;
+      const end = document.getElementById('cgw-end').value;
+      const announce = document.getElementById('cgw-announce').value;
+      const rules = document.getElementById('cgw-rules').value.trim();
+
+      const uniqueId = `GW-8F` + Math.random().toString(36).substring(2, 6).toUpperCase();
+      const secretKey = `SEC-` + Math.random().toString(36).substring(2, 10).toUpperCase();
+
+      const parsedTiers = parseDistributionTiers(distribution);
+
+      const newGw = {
+        id: uniqueId,
+        secretKey: secretKey,
+        name: name,
+        prize: prize,
+        prizeDistribution: distribution,
+        prizeTiers: parsedTiers,
+        winnerCount: winners,
+        banner: banner || '',
+        start: start,
+        end: end,
+        announcementDate: announce,
+        rules: rules,
+        resultPublished: false,
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        if (db) await db.collection("giveaways").doc(uniqueId).set(newGw);
+
+        const workingUrl = getPublicGiveawayUrl(newGw);
+        document.getElementById('created-gw-id').innerText = uniqueId;
+        document.getElementById('created-gw-url').innerText = workingUrl;
+        document.getElementById('create-success-box').style.display = 'block';
+
+        showToast("Giveaway created with prize distribution!", "success");
+        document.getElementById('create-gw-form').reset();
+      } catch (err) {
+        showToast("Error: " + err.message, "danger");
+      }
+    }
+
+    function copyCreatedUrl() {
+      const url = document.getElementById('created-gw-url').innerText;
+      copyToClipboard(url);
+    }
+
+    function openCreatedUrl() {
+      window.open(document.getElementById('created-gw-url').innerText, '_blank');
+    }
+
+    function resetCreateForm() {
+      document.getElementById('create-success-box').style.display = 'none';
+    }
+
+    function renderManageGiveawaysTable() {
+      const tbody = document.getElementById('mgw-table-body');
+      tbody.innerHTML = giveaways.map(gw => {
+        const fullUrl = getPublicGiveawayUrl(gw);
+        const st = getGiveawayStatus(gw);
+        const count = participants.filter(p => p.giveawayId === gw.id && p.isValid !== false).length;
+        return `
+          <tr>
+            <td style="color: var(--gold-400); font-weight:700; font-family: monospace;">${gw.id}</td>
+            <td><b>${gw.name}</b></td>
+            <td style="color: var(--status-live); font-weight:700;">${gw.prize}</td>
+            <td style="font-size: 11.5px; color: var(--gold-300);">${gw.prizeDistribution || 'Default Tiers'}</td>
+            <td>${gw.winnerCount}</td>
+            <td><b>${count}</b> / 1000</td>
+            <td><span class="badge badge-${st.toLowerCase()}">${st}</span></td>
+            <td>
+              <button class="btn btn-outline btn-sm" title="Copy Link" onclick="copyToClipboard('${fullUrl}')"><i class="fa-regular fa-copy"></i> Copy</button>
+              <button class="btn btn-outline btn-sm" onclick="openEditModal('${gw.id}')"><i class="fa-solid fa-pen"></i></button>
+              <button class="btn btn-danger btn-sm" onclick="deleteGiveaway('${gw.id}')"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openEditModal(id) {
+      const gw = giveaways.find(g => g.id === id);
+      if (!gw) return;
+      document.getElementById('edit-gw-id').value = gw.id;
+      document.getElementById('edit-modal-gid').innerText = gw.id;
+      document.getElementById('edit-name').value = gw.name || '';
+      document.getElementById('edit-prize').value = gw.prize || '';
+      document.getElementById('edit-distribution').value = gw.prizeDistribution || '1st: ₹30, 2nd: ₹20, 3rd: ₹15, 4th-10th: ₹10';
+      document.getElementById('edit-winners').value = gw.winnerCount || 10;
+      document.getElementById('edit-end').value = gw.end || '';
+      document.getElementById('edit-announce').value = gw.announcementDate || '';
+      document.getElementById('edit-gw-modal').style.display = 'flex';
+    }
+
+    function closeEditModal() { document.getElementById('edit-gw-modal').style.display = 'none'; }
+
+    async function handleSaveEditGiveaway(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-gw-id').value;
+      const dist = document.getElementById('edit-distribution').value.trim();
+      const updates = {
+        name: document.getElementById('edit-name').value.trim(),
+        prize: document.getElementById('edit-prize').value.trim(),
+        prizeDistribution: dist,
+        prizeTiers: parseDistributionTiers(dist),
+        winnerCount: parseInt(document.getElementById('edit-winners').value),
+        end: document.getElementById('edit-end').value,
+        announcementDate: document.getElementById('edit-announce').value
+      };
+      if (db) await db.collection("giveaways").doc(id).update(updates);
+      closeEditModal();
+      showToast("Updated successfully", "success");
+    }
+
+    async function deleteGiveaway(id) {
+      if (confirm("Delete this giveaway?")) {
+        if (db) await db.collection("giveaways").doc(id).delete();
+        showToast("Giveaway deleted", "info");
+      }
+    }
+
+    /* ==========================================================================
+       PARTICIPANTS (ALAG-ALAG GIVEAWAY FILTER & PAYOUT METHOD TAG)
+       ========================================================================== */
+    function populateParticipantsGwDropdown() {
+      const select = document.getElementById('part-gw-filter');
+      const currentVal = select.value;
+      select.innerHTML = '<option value="ALL">All Campaigns (Consolidated)</option>' + giveaways.map(g => `
+        <option value="${g.id}" ${currentVal === g.id ? 'selected' : ''}>${g.name} (${g.id})</option>
+      `).join('');
+    }
+
+    function renderParticipantsTable() {
+      const gwFilter = document.getElementById('part-gw-filter').value;
+      const statusFilter = document.getElementById('part-status-filter').value;
+
+      let filteredList = [...participants];
+
+      if (gwFilter !== 'ALL') {
+        filteredList = filteredList.filter(p => p.giveawayId === gwFilter);
+        const currentGw = giveaways.find(g => g.id === gwFilter);
+        document.getElementById('part-selected-gw-name').innerText = currentGw ? `${currentGw.name} (${currentGw.id})` : gwFilter;
+      } else {
+        document.getElementById('part-selected-gw-name').innerText = "All Active & Past Campaigns";
+      }
+
+      if (statusFilter === 'VALID') filteredList = filteredList.filter(p => p.isValid !== false);
+      if (statusFilter === 'INVALID') filteredList = filteredList.filter(p => p.isValid === false);
+
+      const valCount = filteredList.filter(p => p.isValid !== false).length;
+      const invalCount = filteredList.length - valCount;
+
+      document.getElementById('cnt-valid-badge').innerText = `${valCount} Valid Members`;
+      document.getElementById('cnt-invalid-badge').innerText = `${invalCount} Invalid`;
+
+      const tbody = document.getElementById('participants-table-body');
+      if (filteredList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-dim);">Is campaign me abhi tak koi member join nahi hua hai.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filteredList.map(p => {
+        // DETECT PAYOUT METHOD TAG
+        const isRedeem = p.payoutType === 'GOOGLE_PLAY_REDEEM' || (p.payoutDetails && /^\d{10}$/.test(p.payoutDetails));
+        const payoutBadge = isRedeem 
+          ? `<span class="payout-badge-play"><i class="fa-brands fa-google-play"></i> Redeem: ${p.payoutDetails || p.upiId}</span>`
+          : `<span class="payout-badge-upi"><i class="fa-solid fa-building-columns"></i> UPI: ${p.payoutDetails || p.upiId}</span>`;
+
+        return `
+          <tr>
+            <td style="color: var(--gold-400); font-family: monospace; font-weight: 700;">${p.id}</td>
+            <td>${p.name}</td>
+            <td>${payoutBadge}</td>
+            <td style="font-family: monospace; color: #facc15; font-weight: 700;">${p.secretCode || 'N/A'}</td>
+            <td><b>${p.giveawayId}</b></td>
+            <td>${p.isValid !== false ? '<span class="badge badge-live">VALID</span>' : '<span class="badge badge-ended">INVALID</span>'}</td>
+            <td>
+              <button class="btn btn-outline btn-sm" onclick="db.collection('participants').doc('${p.id}').update({isValid: ${p.isValid === false}})">
+                Toggle Validity
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /* ==========================================================================
+       WINNER SELECTION (1000 MEMBERS LOCK RULE)
+       ========================================================================== */
+    function populateWinnerSelectionDropdown() {
+      const sel = document.getElementById('draw-gw-select');
+      if (!sel) return;
+      sel.innerHTML = giveaways.map(g => `<option value="${g.id}">${g.name} (${g.id})</option>`).join('');
+      updateDrawSelectionMetrics();
+    }
+
+    function updateDrawSelectionMetrics() {
+      const gwId = document.getElementById('draw-gw-select').value;
+      const gw = giveaways.find(g => g.id === gwId);
+      const entries = participants.filter(p => p.giveawayId === gwId && p.isValid !== false);
+      const validCount = entries.length;
+
+      document.getElementById('draw-m-valid').innerText = validCount;
+
+      const drawBtn = document.getElementById('btn-execute-draw');
+      const lockBox = document.getElementById('draw-lock-notice');
+      const lockText = document.getElementById('draw-lock-text');
+
+      if (validCount < 1000) {
+        drawBtn.disabled = true;
+        drawBtn.innerHTML = `<i class="fa-solid fa-lock"></i> Locked (${validCount}/1000 Members)`;
+        lockBox.style.background = 'rgba(245, 158, 11, 0.08)';
+        lockBox.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+        lockBox.style.color = '#fbbf24';
+        lockText.innerText = `Selection Locked: Is giveaway me abhi ${validCount} valid members hain. Minimum 1000 members hone par hi winner selection unlock hoga.`;
+      } else {
+        drawBtn.disabled = false;
+        drawBtn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Execute Winner Selection`;
+        lockBox.style.background = 'rgba(16, 185, 129, 0.08)';
+        lockBox.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+        lockBox.style.color = '#34d399';
+        lockText.innerText = `Target Completed! 1000+ members verified. Winner selection unlock ho chuka hai.`;
+      }
+    }
+
+    async function promptWinnerSelection() {
+      const gwId = document.getElementById('draw-gw-select').value;
+      const gw = giveaways.find(g => g.id === gwId);
+      const validEntries = participants.filter(p => p.giveawayId === gwId && p.isValid !== false);
+      
+      if (validEntries.length < 1000) {
+        return showToast("Minimum 1000 members required to select winners!", "danger");
+      }
+
+      if (!confirm(`Run selection for ${gw.winnerCount} winners from ${validEntries.length} members?`)) return;
+
+      const pool = [...validEntries].sort(() => 0.5 - Math.random());
+      const winnersPicked = pool.slice(0, Math.min(gw.winnerCount || 10, pool.length));
+
+      if (db) {
+        const batch = db.batch();
+        winnersPicked.forEach((w, idx) => {
+          const rank = idx + 1;
+          const assignedPrize = getPrizeForRank(rank, gw);
+
+          const ref = db.collection("winners").doc(`${gw.id}_${w.id}`);
+          batch.set(ref, {
+            entryId: w.id,
+            name: w.name,
+            giveawayId: gw.id,
+            giveawayName: gw.name,
+            prize: assignedPrize,
+            rank: rank,
+            payoutType: w.payoutType || 'UPI',
+            payoutDetails: w.payoutDetails || w.upiId || 'Protected',
+            resultPublished: false
+          });
+        });
+        await batch.commit();
+      }
+
+      document.getElementById('draw-output-empty').style.display = 'none';
+      const outList = document.getElementById('draw-output-list');
+      outList.style.display = 'flex';
+      outList.innerHTML = winnersPicked.map((wp, i) => {
+        const rank = i + 1;
+        const prizeAmount = getPrizeForRank(rank, gw);
+        return `
+          <div style="background: var(--bg-surface); padding: 10px 14px; border-radius: 8px; border-left: 3px solid var(--gold-400); display: flex; justify-content: space-between; align-items: center;">
+            <div><b>#${rank} ${wp.name}</b> <span style="font-family: monospace; color: var(--gold-400); font-size: 11px;">(${wp.id})</span></div>
+            <div style="color: var(--status-live); font-weight: 800; font-size: 14px;">${prizeAmount}</div>
+          </div>
+        `;
+      }).join('');
+
+      showToast("Winners drawn and prize amounts assigned!", "success");
+    }
+
+    /* ==========================================================================
+       WINNERS MANAGEMENT (ALAG-ALAG GIVEAWAY RESULT PUBLISH & PAYOUT METHOD)
+       ========================================================================== */
+    function populateWinnersGwDropdown() {
+      const select = document.getElementById('win-gw-filter');
+      const currentVal = select.value;
+      select.innerHTML = '<option value="ALL">All Giveaways (All Results)</option>' + giveaways.map(g => `
+        <option value="${g.id}" ${currentVal === g.id ? 'selected' : ''}>${g.name} (${g.id})</option>
+      `).join('');
+    }
+
+    function renderWinnersTable() {
+      const gwFilter = document.getElementById('win-gw-filter').value;
+      const masterActionWrap = document.getElementById('master-publish-action-wrap');
+
+      let filteredWinners = [...winnersList];
+
+      if (gwFilter !== 'ALL') {
+        filteredWinners = filteredWinners.filter(w => w.giveawayId === gwFilter);
+
+        const selectedGw = giveaways.find(g => g.id === gwFilter);
+        const isPublished = selectedGw && selectedGw.resultPublished === true;
+
+        masterActionWrap.innerHTML = `
+          <button class="btn ${isPublished ? 'btn-outline' : 'btn-gold'} btn-sm" onclick="toggleEntireGiveawayResult('${gwFilter}', ${!isPublished})">
+            <i class="fa-solid ${isPublished ? 'fa-eye-slash' : 'fa-bullhorn'}"></i> 
+            ${isPublished ? 'Unpublish This Giveaway Result' : 'Publish This Giveaway Result'}
+          </button>
+        `;
+      } else {
+        masterActionWrap.innerHTML = `
+          <span style="font-size: 12px; color: var(--text-dim);">Select a giveaway to publish all its results together</span>
+        `;
+      }
+
+      filteredWinners.sort((a, b) => (a.rank || 1) - (b.rank || 1));
+
+      const tbody = document.getElementById('winners-table-body');
+      if (filteredWinners.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-dim);">Is giveaway ke liye abhi tak winners select nahi hue hain.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filteredWinners.map(w => {
+        const isRedeem = w.payoutType === 'GOOGLE_PLAY_REDEEM' || (w.payoutDetails && /^\d{10}$/.test(w.payoutDetails));
+        const payoutBadge = isRedeem 
+          ? `<span class="payout-badge-play"><i class="fa-brands fa-google-play"></i> Redeem: ${w.payoutDetails || 'Phone'}</span>`
+          : `<span class="payout-badge-upi"><i class="fa-solid fa-building-columns"></i> UPI: ${w.payoutDetails || 'UPI ID'}</span>`;
+
+        return `
+          <tr>
+            <td>
+              <span style="font-weight: 800; color: #fff;">#${w.rank || 1} ${w.name}</span>
+            </td>
+            <td>
+              <span class="win-amount-pill">${w.prize || '₹30'}</span>
+            </td>
+            <td>${payoutBadge}</td>
+            <td style="color: var(--gold-400); font-family: monospace;">${w.entryId}</td>
+            <td><b>${w.giveawayId}</b></td>
+            <td>${w.resultPublished ? '<span class="badge badge-live">PUBLISHED</span>' : '<span class="badge badge-ended">UNPUBLISHED</span>'}</td>
+            <td>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn btn-outline btn-sm" onclick="toggleSingleWinnerPublication('${w.id}', '${w.giveawayId}', ${!w.resultPublished})">
+                  ${w.resultPublished ? 'Unpublish' : 'Publish'}
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="removeWinner('${w.id}')"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function toggleEntireGiveawayResult(giveawayId, shouldPublish) {
+      if (!confirm(`Are you sure you want to ${shouldPublish ? 'PUBLISH' : 'UNPUBLISH'} results for Giveaway ${giveawayId}?`)) return;
+
+      try {
+        if (db) {
+          await db.collection("giveaways").doc(giveawayId).update({ resultPublished: shouldPublish });
+
+          const snaps = await db.collection("winners").where("giveawayId", "==", giveawayId).get();
+          const batch = db.batch();
+          snaps.docs.forEach(doc => {
+            batch.update(doc.ref, { resultPublished: shouldPublish });
+          });
+          await batch.commit();
+        }
+
+        showToast(`Results for ${giveawayId} ${shouldPublish ? 'Published Live' : 'Unpublished'}!`, "success");
+      } catch (err) {
+        showToast("Error updating publication: " + err.message, "danger");
+      }
+    }
+
+    async function toggleSingleWinnerPublication(winnerDocId, giveawayId, shouldPublish) {
+      try {
+        if (db) {
+          await db.collection("winners").doc(winnerDocId).update({ resultPublished: shouldPublish });
+          if (shouldPublish) {
+            await db.collection("giveaways").doc(giveawayId).update({ resultPublished: true });
+          }
+        }
+        showToast("Winner status updated!", "success");
+      } catch (err) {
+        showToast("Error: " + err.message, "danger");
+      }
+    }
+
+    async function removeWinner(winnerDocId) {
+      if (!confirm("Remove this winner record?")) return;
+      try {
+        if (db) await db.collection("winners").doc(winnerDocId).delete();
+        showToast("Winner removed", "info");
+      } catch (err) {
+        showToast("Error: " + err.message, "danger");
+      }
+    }
+
+    function populateSettingsForm() {
+      document.getElementById('set-name').value = appConfig.websiteName || 'GiveawayX';
+      document.getElementById('set-url').value = appConfig.websiteUrl || 'https://giveawayx-80b5e.web.app';
+    }
+
+    async function handleSaveSettings(e) {
+      e.preventDefault();
+      const updates = {
+        websiteName: document.getElementById('set-name').value.trim(),
+        websiteUrl: document.getElementById('set-url').value.trim()
+      };
+      if (db) await db.collection("settings").doc("platform_config").set(updates, { merge: true });
+      appConfig = { ...appConfig, ...updates };
+      showToast("Settings saved to Cloud!", "success");
+    }
+
+    function handleGlobalSearch(term) {
+      const q = term.toLowerCase().trim();
+      if (!q) return;
+      const matchedGw = giveaways.find(g => (g.id && g.id.toLowerCase().includes(q)) || (g.name && g.name.toLowerCase().includes(q)));
+      if (matchedGw) {
+        switchNav('manage-giveaways');
+        return;
+      }
+      const matchedP = participants.find(p => (p.name && p.name.toLowerCase().includes(q)) || (p.id && p.id.toLowerCase().includes(q)));
+      if (matchedP) {
+        switchNav('participants');
+      }
+    }
+
+    function showToast(msg, type = 'info') {
+      const shelf = document.getElementById('toast-shelf');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.innerText = msg;
+      shelf.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    document.addEventListener('DOMContentLoaded', checkAuth);
+  </script>
+</body>
+</html>
